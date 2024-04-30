@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const fileUpload = require("express-fileupload");
 const axios = require("axios");
 require("dotenv").config();
 
@@ -16,16 +17,12 @@ app.use(
   })
 );
 
-// const axiosLivepeer = axios.create({
-//   baseURL: "https://livepeer.com/api/",
-//   headers: {
-//     Authorization: `Bearer ${process.env.LIVEPEER_API_KEY}`,
-//     "Content-Type": "application/json",
-//   },
-// });
-
-const livepeer = new Livepeer({
-  apiKey: process.env.LIVEPEER_API_KEY,
+const axiosLivepeer = axios.create({
+  baseURL: "https://livepeer.com/api/",
+  headers: {
+    Authorization: `Bearer ${process.env.LIVEPEER_API_KEY}`,
+    "Content-Type": "application/json",
+  },
 });
 
 const PORT = process.env.PORT || 3000;
@@ -38,14 +35,11 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-app.get("/videos", async (req, res) => {
-  try {
-    const assets = await livepeer.asset.getAll();
-    res.send(assets);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send(error.message);
-  }
+app.get("/videos", (req, res) => {
+  axiosLivepeer
+    .get("asset")
+    .then((response) => res.send(response.data))
+    .catch((error) => res.status(500).send(error.message));
 });
 
 app.post("/upload", (req, res) => {
