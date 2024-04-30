@@ -1,7 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
+const fs = require("fs");
 const axios = require("axios");
+const path = require("path");
+
+const ngrokUrl = "https://c3f6-82-52-88-211.ngrok-free.app";
+
 require("dotenv").config();
 
 const app = express();
@@ -12,8 +17,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
   fileUpload({
+    createParentPath: true,
     useTempFiles: true,
-    tempFileDir: "/temp-asset",
+    tempFileDir: path.join(__dirname, "temp-asset"),
   })
 );
 
@@ -47,26 +53,32 @@ app.post("/upload", (req, res) => {
     return res.status(400).send("No files were uploaded.");
   }
 
-  // Access the uploaded file via the <input> field with the name 'video'
-  let videoFile = req.files.video;
+  const videoFile = req.files.video;
+  const tempFilePath = videoFile.tempFilePath;
+  const fileName = videoFile.name;
 
-  // Temporarily save the file (this example saves it in a local /public directory, adjust as necessary)
-  const uploadPath = __dirname + "/public/uploads/" + videoFile.name;
+  const permanentDirPath = path.join(__dirname, "uploaded-asset");
+  const permanentFilePath = path.join(permanentDirPath, fileName);
 
-  // Use the mv() method to place the file on the server
-  videoFile.mv(uploadPath, function (err) {
-    if (err) return res.status(500).send(err);
+  const publicUrl = `${ngrokUrl}/${path.basename(tempFilePath)}`;
 
-    // If the file is stored, then send it to Livepeer
-    const videoUrl = `https://f8ad-87-15-116-81.ngrok-free.app/uploads/${videoFile.name}`;
+  axiosLivepeer
+    .post("asset/upload/url", {
+      name: fileName,
+      url: publicUrl,
+    })
+    .then(() => {
+      fs.rename(tempFilePath, permanentFilePath, (err) => {
+        if (err) {
+          console.error("Failed to move file:", err);
+          return res.status(500).send("Failed to move file after upload");
+        }
 
-    // Use the Livepeer API to upload the video
-    axiosLivepeer
-      .post("asset/import", {
-        url: videoUrl,
-        name: videoFile.name,
-      })
-      .then((response) => res.status(201).send(response.data))
-      .catch((error) => res.status(500).send(error.message));
-  });
+        res.send("File uploaded and moved successfully");
+      });
+    })
+    .catch((error) => {
+      console.error("Error uploading to Livepeer:", error);
+      res.status(500).send(error.response.data);
+    });
 });
