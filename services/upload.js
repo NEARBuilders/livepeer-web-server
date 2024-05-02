@@ -7,7 +7,7 @@ const requestUploadUrl = async (assetName) => {
     const response = await axiosLivepeer.post("asset/request-upload", {
       name: assetName,
     });
-    return response.data.tusEndpoint;
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -17,11 +17,11 @@ const uploadFile = async (fileDetails) => {
   const { tempFilePath, fileName, mimetype, size } = fileDetails;
 
   const fileStream = fs.createReadStream(tempFilePath);
-  const tusEndpoint = await requestUploadUrl(fileName);
+  const data = await requestUploadUrl(fileName);
 
   return new Promise((resolve, reject) => {
     const uploader = new tus.Upload(fileStream, {
-      endpoint: tusEndpoint,
+      endpoint: data.tusEndpoint,
       metadata: {
         filename: fileName,
         filetype: mimetype,
@@ -34,7 +34,7 @@ const uploadFile = async (fileDetails) => {
       },
       onSuccess: () => {
         console.log("Upload finished:", uploader.url);
-        resolve("Upload finished");
+        resolve({ message: "Upload finished", data: data });
       },
     });
 

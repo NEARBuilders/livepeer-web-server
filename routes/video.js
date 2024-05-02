@@ -30,11 +30,12 @@ router.post("/upload", upload.single("video"), async (req, res) => {
   try {
     const result = await uploadService.uploadFile({
       tempFilePath: req.file.path,
-      fileName: req.file.originalname,
+      fileName: req.body.name,
       mimetype: req.file.mimetype,
       size: req.file.size,
     });
-    res.send(result);
+
+    res.send(result.data);
   } catch (error) {
     console.error("Upload error:", error);
     res.status(500).send("Upload failed");
