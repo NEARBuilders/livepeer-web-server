@@ -2,3 +2,4 @@ node_modules
 temp-asset
 uploaded-asset
 .env
+.vercel
