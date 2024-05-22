@@ -24,6 +24,18 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/playback/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const response = await axiosLivepeer.get(`playback/${id}`);
+
+    res.send(response.data.meta.source[0]);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
 router.post("/upload", upload.single("video"), async (req, res) => {
   if (!req.file) return res.status(400).send("No files were uploaded.");
 
