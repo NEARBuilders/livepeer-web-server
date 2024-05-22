@@ -7,7 +7,7 @@ const axiosLivepeer = require("../config/axios");
 
 const router = express.Router();
 
-const upload = multer({ dest: "../temp-asset/" });
+const upload = multer({ dest: "../tmp/" });
 
 router.get("/", async (req, res) => {
   try {

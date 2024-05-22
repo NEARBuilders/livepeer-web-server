@@ -1,5 +1,5 @@
 node_modules
-temp-asset
+tmp
 uploaded-asset
 .env
 .vercel
